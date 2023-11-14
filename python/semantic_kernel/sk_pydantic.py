@@ -88,3 +88,7 @@ class SKGenericModel(GenericModel):
 
         json_encoders = _JSON_ENCODERS
         arbitrary_types_allowed = True
+
+
+class HttpsUrl(pdt.HttpUrl):
+    allowed_schemes = {"https"}
