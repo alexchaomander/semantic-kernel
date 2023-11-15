@@ -27,6 +27,7 @@ class AzureOpenAIConfigBase(OpenAIHandler):
         ad_token_provider: Optional[AsyncAzureADTokenProvider] = None,
         log: Optional[Logger] = None,
     ) -> None:
+        # TODO: add SK user-agent here
         if api_key:
             client = AsyncAzureOpenAI(
                 azure_endpoint=endpoint,

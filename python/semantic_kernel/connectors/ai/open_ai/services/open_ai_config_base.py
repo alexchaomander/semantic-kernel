@@ -22,6 +22,7 @@ class OpenAIConfigBase(OpenAIHandler):
         org_id: Optional[str] = None,
         log: Optional[Logger] = None,
     ) -> None:
+        # TODO: add SK user-agent here
         client = AsyncOpenAI(api_key=api_key, organization=org_id)
         super().__init__(
             model_id=model_id,
