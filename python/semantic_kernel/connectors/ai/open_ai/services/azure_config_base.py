@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft. All rights reserved.
 
 from logging import Logger
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import Any, Dict, Optional
 
 from openai import AsyncAzureOpenAI
 from openai.lib.azure import AsyncAzureADTokenProvider
@@ -10,9 +10,6 @@ from semantic_kernel.connectors.ai.open_ai.services.open_ai_handler import (
     OpenAIHandler,
     OpenAIModelTypes,
 )
-
-if TYPE_CHECKING:
-    pass
 
 
 class AzureOpenAIConfigBase(OpenAIHandler):
