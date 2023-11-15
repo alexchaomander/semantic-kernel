@@ -82,23 +82,25 @@ class OpenAIHandler(AIServiceClientBase, ABC):
     def _validate_request(self, request_settings, prompt, messages, chat_mode):
         """Validate the request, check if the settings are present and valid."""
         try:
-            assert self.model_type != OpenAIModelTypes.EMBEDDING, "The model type is not supported for this operation, please use a text or chat model"
+            assert (
+                self.model_type != OpenAIModelTypes.EMBEDDING
+            ), "The model type is not supported for this operation, please use a text or chat model"
         except AssertionError as exc:
             raise AIException(
-                AIException.ErrorCodes.FunctionTypeNotSupported,
-                exc.args[0],
-                exc
+                AIException.ErrorCodes.FunctionTypeNotSupported, exc.args[0], exc
             ) from exc
         try:
             assert request_settings, "The request settings cannot be `None`"
-            assert request_settings.max_tokens >= 1, f"The max tokens must be greater than 0, but was {request_settings.max_tokens}"
-            assert chat_mode and (prompt or messages), "The messages cannot be `None` or empty, please use either prompt or messages"
+            assert (
+                request_settings.max_tokens >= 1
+            ), f"The max tokens must be greater than 0, but was {request_settings.max_tokens}"
+            assert chat_mode and (
+                prompt or messages
+            ), "The messages cannot be `None` or empty, please use either prompt or messages"
             assert not chat_mode and prompt, "The prompt cannot be `None` or empty"
         except AssertionError as exc:
             raise AIException(
-                AIException.ErrorCodes.InvalidRequest,
-                exc.args[0],
-                exc
+                AIException.ErrorCodes.InvalidRequest, exc.args[0], exc
             ) from exc
 
     def _create_model_args(
