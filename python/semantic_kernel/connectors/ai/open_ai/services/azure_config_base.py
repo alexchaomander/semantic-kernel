@@ -1,60 +1,77 @@
 # Copyright (c) Microsoft. All rights reserved.
 
 from logging import Logger
-from typing import Any, Dict, Optional
+from typing import Any, Awaitable, Callable, Dict, Optional
 
 from openai import AsyncAzureOpenAI
-from openai.lib.azure import AsyncAzureADTokenProvider
+from pydantic import validate_arguments
 
+from semantic_kernel.connectors.ai.ai_exception import AIException
 from semantic_kernel.connectors.ai.open_ai.services.open_ai_handler import (
     OpenAIHandler,
     OpenAIModelTypes,
 )
+from semantic_kernel.sk_pydantic import HttpsUrl
 
 
 class AzureOpenAIConfigBase(OpenAIHandler):
+    @validate_arguments(config=dict(arbitrary_types_allowed=True))
     def __init__(
         self,
         deployment_name: str,
-        endpoint: str,
-        model_type: Optional[OpenAIModelTypes],
+        model_type: OpenAIModelTypes,
+        endpoint: Optional[HttpsUrl] = None,
+        base_url: Optional[HttpsUrl] = None,
         api_version: str = "2022-12-01",
         api_key: Optional[str] = None,
         ad_token: Optional[str] = None,
-        ad_token_provider: Optional[AsyncAzureADTokenProvider] = None,
+        ad_token_provider: Optional[Callable[[], "str | Awaitable[str]"]] = None,
         log: Optional[Logger] = None,
     ) -> None:
         # TODO: add SK user-agent here
-        if api_key:
-            client = AsyncAzureOpenAI(
-                azure_endpoint=endpoint,
-                azure_deployment=deployment_name,
-                api_key=api_key,
-                api_version=api_version,
+        if not api_key and not ad_token and not ad_token_provider:
+            raise AIException(
+                AIException.ErrorCodes.InvalidConfiguration,
+                "Please provide either api_key, ad_token or ad_token_provider",
             )
-        elif ad_token:
+        if not base_url and not endpoint:
+            raise AIException(
+                AIException.ErrorCodes.InvalidConfiguration,
+                "Please provide either base_url or endpoint",
+            )
+        if base_url:
             client = AsyncAzureOpenAI(
-                azure_endpoint=endpoint,
-                azure_deployment=deployment_name,
+                base_url=base_url,
                 api_version=api_version,
-                ad_token=ad_token,
+                api_key=api_key,
+                azure_ad_token=ad_token,
+                azure_ad_token_provider=ad_token_provider,
             )
         else:
             client = AsyncAzureOpenAI(
                 azure_endpoint=endpoint,
                 azure_deployment=deployment_name,
                 api_version=api_version,
-                ad_token_provider=ad_token_provider,
+                api_key=api_key,
+                azure_ad_token=ad_token,
+                azure_ad_token_provider=ad_token_provider,
             )
         super().__init__(
             model_id=deployment_name,
-            client=client,
             log=log,
+            client=client,
             model_type=model_type,
         )
 
     def to_dict(self) -> Dict[str, str]:
-        return self.dict(
+        client_settings = {
+            "base_url": self.client.base_url,
+            "api_version": self.client._custom_query["api-version"],
+            "api_key": self.client.api_key,
+            "ad_token": self.client._azure_ad_token,
+            "ad_token_provider": self.client._azure_ad_token_provider,
+        }
+        base = self.dict(
             exclude={
                 "prompt_tokens",
                 "completion_tokens",
@@ -62,10 +79,13 @@ class AzureOpenAIConfigBase(OpenAIHandler):
                 "api_type",
                 "org_id",
                 "model_type",
+                "client",
             },
             by_alias=True,
             exclude_none=True,
         )
+        base.update(client_settings)
+        return base
 
     def get_model_args(self) -> Dict[str, Any]:
         return {"model": self.model_id}

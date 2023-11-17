@@ -24,7 +24,6 @@ def test_open_ai_chat_completion_init() -> None:
     )
 
     assert open_ai_chat_completion.model_id == model_id
-    assert open_ai_chat_completion.api_type == "open_ai"
     assert isinstance(open_ai_chat_completion, ChatCompletionClientBase)
 
 

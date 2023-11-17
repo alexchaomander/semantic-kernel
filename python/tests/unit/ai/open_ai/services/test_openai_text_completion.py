@@ -24,7 +24,6 @@ def test_open_ai_text_completion_init() -> None:
     )
 
     assert open_ai_text_completion.model_id == model_id
-    assert open_ai_text_completion.api_type == "open_ai"
     assert isinstance(open_ai_text_completion, TextCompletionClientBase)
 
 

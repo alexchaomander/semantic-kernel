@@ -94,10 +94,12 @@ class OpenAIHandler(AIServiceClientBase, ABC):
             assert (
                 request_settings.max_tokens >= 1
             ), f"The max tokens must be greater than 0, but was {request_settings.max_tokens}"
-            assert chat_mode and (
-                prompt or messages
-            ), "The messages cannot be `None` or empty, please use either prompt or messages"
-            assert not chat_mode and prompt, "The prompt cannot be `None` or empty"
+            if chat_mode:
+                assert (
+                    prompt or messages
+                ), "The messages cannot be `None` or empty, please use either prompt or messages"
+            if not chat_mode:
+                assert prompt, "The prompt cannot be `None` or empty"
         except AssertionError as exc:
             raise AIException(
                 AIException.ErrorCodes.InvalidRequest, exc.args[0], exc
